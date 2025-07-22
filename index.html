@@ -223,8 +223,8 @@
             settingsFormContainer.innerHTML = formHTML;
             settingsFormContainer.querySelectorAll('input').forEach(input => {
                 input.addEventListener('input', (e) => {
+                    // Update the state in memory, but don't save on every keystroke
                     userPortfolio[e.target.dataset.coinId] = parseFloat(e.target.value) || 0;
-                    savePortfolio();
                 });
             });
         }
@@ -245,6 +245,12 @@
         }
 
         function navigate(targetScreenId) {
+            const currentScreen = document.querySelector('.screen.active');
+            // Save portfolio if navigating away from the settings screen
+            if (currentScreen && currentScreen.id === 'settings-screen' && targetScreenId !== 'settings-screen') {
+                savePortfolio();
+            }
+
             screens.forEach(s => {
                 s.classList.remove('active');
                 s.classList.add('hidden');
@@ -332,9 +338,16 @@
         document.getElementById('qr-modal-button').addEventListener('click', () => qrModal.classList.add('active'));
         document.getElementById('close-qr-modal').addEventListener('click', () => qrModal.classList.remove('active'));
 
-        // --- Initial Load ---
+        // --- Initial Load & Robust Saving ---
         fetchCryptoData();
         setInterval(fetchCryptoData, 60000);
+
+        // Save data when the user leaves the page (refresh, close tab, etc.)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                savePortfolio();
+            }
+        });
     });
     </script>
 </body>
